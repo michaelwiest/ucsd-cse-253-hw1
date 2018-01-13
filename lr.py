@@ -11,11 +11,11 @@ class LinearRegressor():
         self.lr_dampener = lr_dampener
         self.holdout_data = None
         self.holdout_labels_original = None
-
+        self.target = None
         self.load_data(self.mnist_directory)
         print 'Loaded data...'
         if lr0 == None:
-            self.lr0 = 0.02 / self.train_data.shape[0]
+            self.lr0 = 0.002 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
 
@@ -46,6 +46,7 @@ class LinearRegressor():
         print 'Subsetted data.'
 
     def reassign_labels_for_target(self, target):
+        self.target = target
         self.train_labels = [int(i == target) for i in self.train_labels_original]
         self.test_labels = [int(i == target) for i in self.test_labels_original]
         if self.holdout_labels_original is not None:
@@ -56,7 +57,6 @@ class LinearRegressor():
     def prefix_one(self, some_array):
         return [[1] + sr for sr in some_array]
 
-    # This is all taken from CSE 250A
     def sigma(self, x, w):
         return 1 / (1 + np.exp(-1 * (np.dot(x, w))))
 
@@ -88,10 +88,9 @@ class LinearRegressor():
             return self.lr0
 
     def gradient_descent(self, iterations, anneal=True, log_rate=None):
-        self.train_logs = []
-        self.holdout_errors = []
         self.iter_steps = []
-        # self.logs = []
+        self.train_logs = []
+        self.test_logs = []
         self.holdout_logs = []
         lr = self.lr0
 
@@ -111,6 +110,10 @@ class LinearRegressor():
                                                          self.train_data,
                                                          self.train_labels)
                                                          )
+                    self.test_logs.append(self.evaluate(self.weights,
+                                                        self.test_data,
+                                                        self.test_labels)
+                                                        )
                     if self.holdout_data is not None:
                         self.holdout_logs.append(self.evaluate(self.weights,
                                                                self.holdout_data,
@@ -128,19 +131,21 @@ class LinearRegressor():
     def plot_logs(self):
         plt.plot(self.iter_steps, self.train_logs, label='Training Data')
         plt.plot(self.iter_steps, self.holdout_logs, label='Holdout Data')
-        pred = self.evaluate(self.weights, self.test_data, self.test_labels)
-        plt.axhline(pred, label='Test Data')
+        plt.plot(self.iter_steps, self.test_logs, label='Test Data')
+        plt.ylabel('Percent misclassified')
+        plt.xlabel('Iterations')
+        plt.title('Gradient descent for character: {}'.format(self.target))
         plt.legend(loc='upper right')
         plt.show()
 
 def main():
 
     RL = LinearRegressor('mnist', lr_dampener=100)
-    RL.subset_data(10000, -200)
+    RL.subset_data(15000, -200)
     RL.assign_holdout(10)
 
     RL.reassign_labels_for_target(2)
-    RL.gradient_descent(1000, log_rate=100)
+    RL.gradient_descent(700, log_rate=50)
     RL.plot_logs()
 
 
