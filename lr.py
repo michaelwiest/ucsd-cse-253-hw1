@@ -126,13 +126,18 @@ class LinearRegressor():
         self.gradient_descent(iterations, anneal=anneal, log_rate=log_rate)
 
 
-RL = LinearRegressor('mnist', lr_dampener=100)
-RL.subset_data(5000, -200)
-RL.assign_holdout(10)
+def main():
 
-RL.reassign_labels_for_target(2)
-RL.gradient_descent(1000, log_rate=100)
+    RL = LinearRegressor('mnist', lr_dampener=100)
+    RL.subset_data(5000, -200)
+    RL.assign_holdout(10)
 
-print RL.train_logs
-print RL.holdout_logs
-print RL.evaluate(RL.weights, RL.test_data, RL.test_labels)
+    RL.reassign_labels_for_target(2)
+    RL.gradient_descent(1000, log_rate=100)
+
+    plt.plot(RL.iter_steps, RL.train_logs)
+    plt.plot(RL.iter_steps, RL.holdout_logs)
+    plt.show()
+
+if __name__ == '__main__':
+    main()
