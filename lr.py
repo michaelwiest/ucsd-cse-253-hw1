@@ -125,19 +125,24 @@ class LinearRegressor():
         self.reassign_labels_for_target(num)
         self.gradient_descent(iterations, anneal=anneal, log_rate=log_rate)
 
+    def plot_logs(self):
+        plt.plot(self.iter_steps, self.train_logs, label='Training Data')
+        plt.plot(self.iter_steps, self.holdout_logs, label='Holdout Data')
+        pred = self.evaluate(self.weights, self.test_data, self.test_labels)
+        plt.axhline(pred, label='Test Data')
+        plt.legend(loc='upper right')
+        plt.show()
 
 def main():
 
     RL = LinearRegressor('mnist', lr_dampener=100)
-    RL.subset_data(5000, -200)
+    RL.subset_data(10000, -200)
     RL.assign_holdout(10)
 
     RL.reassign_labels_for_target(2)
     RL.gradient_descent(1000, log_rate=100)
+    RL.plot_logs()
 
-    plt.plot(RL.iter_steps, RL.train_logs)
-    plt.plot(RL.iter_steps, RL.holdout_logs)
-    plt.show()
 
 if __name__ == '__main__':
     main()
