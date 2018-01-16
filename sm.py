@@ -22,10 +22,13 @@ class SoftMax():
         self.weights = np.zeros((self.train_data.shape[1],
                                  self.num_categories
                                  ))
+        # print self.weights.shape
+        # print self.num_categories
 
     def get_regularize_labels(self, labels):
-        potential_vals = list(set(self.train_labels)).sort()
-        return np.array([[int(l == p) for p in potential_vals] for l in labs])
+        potential_vals = list(set(labels))
+        potential_vals.sort()
+        return np.array([[int(l == p) for p in potential_vals] for l in labels])
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
@@ -68,7 +71,9 @@ class SoftMax():
     def sigma(self, x, w):
         dot_exp = np.exp(np.dot(x, w))
         summed = np.sum(dot_exp, axis=1)
-        return dot_exp / summed
+        summed = np.reshape(summed, (dot_exp.shape[0], 1))
+        summed = np.repeat(summed, dot_exp.shape[1], axis=1)
+        return (dot_exp / (1.0 * summed))
 
     def L(self, w, x, y):
         rvals = self.get_regularize_labels(y)
@@ -81,6 +86,9 @@ class SoftMax():
 
     def dl(self, w, x, y):
         difference = (self.get_regularize_labels(y) - self.sigma(x, w))
+        print self.get_regularize_labels(y)
+        print self.sigma(x, w)
+        print difference
         return np.dot(np.transpose(x), difference)
 
     def assign_holdout(self, percent):
@@ -113,9 +121,10 @@ class SoftMax():
         for t in xrange(iterations):
             if anneal:
                 lr = self.update_learning_rate(t)
-            prediction = self.sigma(self.train_data, self.weights)
-            error = self.train_labels - prediction
-            grad = dl(self.weights, self.train_data, self.train_labels)
+            # prediction = self.sigma(self.train_data, self.weights)
+            # error = self.get_regularize_labels(self.train_labels) - prediction
+            grad = self.dl(self.weights, self.train_data, self.train_labels)
+            # print prediction
             self.weights = np.add(self.weights, lr * grad)
 
 
@@ -156,12 +165,12 @@ class SoftMax():
 
 def main():
 
-    RL = LinearRegressor('mnist', lr_dampener=500, lr0=0.0002)
-    RL.subset_data(1000, -200)
+    RL = SoftMax('mnist', lr_dampener=10, lr0=0.000002)
+    RL.subset_data(100, -200)
     RL.assign_holdout(10)
 
-    RL.reassign_labels_for_target(2)
-    RL.gradient_descent(500, log_rate=50)
+    # RL.reassign_labels_for_target(2)
+    RL.gradient_descent(1, log_rate=50)
     RL.plot_logs()
 
 
