@@ -23,8 +23,7 @@ class SoftMax():
         self.weights = np.zeros((self.train_data.shape[1],
                                  self.num_categories
                                  ))
-        # print self.weights.shape
-        # print self.num_categories
+
 
     def get_regularize_labels(self, labels):
         potential_vals = list(set(labels))
@@ -76,12 +75,7 @@ class SoftMax():
         summed = np.sum(dot_exp, axis=1)
         summed = np.reshape(summed, (dot_exp.shape[0], 1))
         summed = np.repeat(summed, dot_exp.shape[1], axis=1)
-        # print dot_exp
-        # print summed
-        # print (dot_exp / (1.0 * summed))
         return (dot_exp / (1.0 * summed))
-        # a = np.dot(np.transpose(w), np.transpose(x))
-
 
     def L(self, w, x, y):
         rvals = self.get_regularize_labels(y)
@@ -94,10 +88,6 @@ class SoftMax():
 
     def dl(self, w, x, y):
         difference = (self.get_regularize_labels(y) - self.softmax(x, w))
-        # print self.get_regularize_labels(y)
-        # print self.softmax(x, w)
-        # print difference
-        # print np.dot(np.transpose(x), difference)
         return np.dot(np.transpose(x), difference)
 
     def assign_holdout(self, percent):
@@ -138,7 +128,8 @@ class SoftMax():
             # print self.weights
             # print grad
             # print '------'
-            print self.L(self.weights, self.train_data, self.train_labels)
+            # print self.L(self.weights, self.train_data, self.train_labels)
+            # print self.evaluate(self.weights, self.train_data, self.train_labels)
 
             if log_rate is not None:
                 if t % log_rate == 0:
@@ -184,11 +175,11 @@ class SoftMax():
 
 def main():
 
-    RL = SoftMax('mnist', lr_dampener=10, lr0=0.00002)
-    RL.subset_data(50, -200)
+    RL = SoftMax('mnist', lr_dampener=100, lr0=0.00000002)
+    RL.subset_data(20000, -200)
     RL.assign_holdout(10)
 
-    RL.gradient_descent(10, log_rate=10)
+    RL.gradient_descent(500, log_rate=10)
     RL.plot_logs()
 
 
