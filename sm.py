@@ -2,6 +2,7 @@ from mnist import MNIST
 import pandas as pd
 import numpy as np
 import pylab as plt
+from helper import *
 
 # np.set_printoptions(threshold=np.nan)
 np.set_printoptions(threshold=100)
@@ -16,7 +17,7 @@ class SoftMax():
         self.load_data(self.mnist_directory)
         print 'Loaded data...'
         if lr0 == None:
-            self.lr0 = lr0 / self.train_data.shape[0]
+            self.lr0 = 0.001 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
 
@@ -151,13 +152,7 @@ class SoftMax():
     def evaluate(self, w, x, y):
         ind = np.argmax(self.softmax(x, w), axis=1)
         pred = [self.possible_categories[i] for i in ind]
-        # print '----'
-        # print self.softmax(x, w)
-        # print np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
-        # print pred
-        # print y
-        # print ind
-        return np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
+        return 100.0 * np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
 
     def train_on_number(self, num, iterations, log_rate=None, anneal=True):
         self.reassign_labels_for_target(num)
@@ -169,19 +164,19 @@ class SoftMax():
         plt.plot(self.iter_steps, self.test_logs, label='Test Data')
         plt.ylabel('Percent misclassified')
         plt.xlabel('Iterations')
-        plt.title('Gradient descent for character: {}'.format(self.target))
+        plt.title('Softmax Regression')
         plt.legend(loc='upper right')
         plt.show()
 
-def main():
+# def main():
 
-    RL = SoftMax('mnist', lr_dampener=100, lr0=0.00000002)
-    RL.subset_data(20000, -200)
-    RL.assign_holdout(10)
+RL = SoftMax('mnist', lr_dampener=50)
+RL.subset_data(20000, -200)
+RL.assign_holdout(10)
 
-    RL.gradient_descent(500, log_rate=10)
-    RL.plot_logs()
+RL.gradient_descent(400, log_rate=10)
+RL.plot_logs()
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

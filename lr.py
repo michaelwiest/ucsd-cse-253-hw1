@@ -2,6 +2,7 @@ from mnist import MNIST
 import pandas as pd
 import numpy as np
 import pylab as plt
+from helper import *
 
 np.set_printoptions(threshold=np.nan)
 
@@ -15,7 +16,7 @@ class LinearRegressor():
         self.load_data(self.mnist_directory)
         print 'Loaded data...'
         if lr0 == None:
-            self.lr0 = lr0 / self.train_data.shape[0]
+            self.lr0 = 0.001 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
 
@@ -84,7 +85,6 @@ class LinearRegressor():
         self.train_labels_original = self.train_labels_original[:-num_held]
         self.holdout_data = self.train_data[-num_held:]
         self.holdout_labels_original = self.train_labels_original[-num_held:]
-        print self.holdout_data.shape
         print 'Assigned holdout data'
 
     def update_learning_rate(self, iteration):
@@ -133,7 +133,7 @@ class LinearRegressor():
 
     def evaluate(self, w, x, y):
         pred = np.round(self.sigma(x, w))
-        return np.sum(np.abs(y - pred)) * 100 / x.shape[0]
+        return np.sum(np.abs(y - pred)) * 100.0 / x.shape[0]
 
     def train_on_number(self, num, iterations, log_rate=None, anneal=True):
         self.reassign_labels_for_target(num)
@@ -149,16 +149,16 @@ class LinearRegressor():
         plt.legend(loc='upper right')
         plt.show()
 
-def main():
+# def main():
 
-    RL = LinearRegressor('mnist', lr_dampener=10, lr0=0.0002)
-    RL.subset_data(20000, -200)
-    RL.assign_holdout(10)
+RL = LinearRegressor('mnist', lr_dampener=75)#, lr0=0.0002)
+RL.subset_data(20000, -200)
+RL.assign_holdout(10)
 
-    RL.reassign_labels_for_target(2)
-    RL.gradient_descent(500, log_rate=50)
-    RL.plot_logs()
+RL.reassign_labels_for_target(2)
+RL.gradient_descent(500, log_rate=50)
+RL.plot_logs()
 
-
-if __name__ == '__main__':
-    main()
+#
+# if __name__ == '__main__':
+#     main()
