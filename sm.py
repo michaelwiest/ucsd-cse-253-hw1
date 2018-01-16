@@ -2,7 +2,6 @@ from mnist import MNIST
 import pandas as pd
 import numpy as np
 import pylab as plt
-from helper import *
 
 # np.set_printoptions(threshold=np.nan)
 np.set_printoptions(threshold=100)
@@ -85,7 +84,8 @@ class SoftMax():
         # return np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
 
     def norm_loss_function(self, w, x, y):
-        return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
+        # return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
+        return (1 / (1.0 * x.shape[0] * w.shape[1])) * np.sum(y * np.log(self.softmax(x, w)))
 
     def dl(self, w, x, y):
         difference = (self.get_regularize_labels(y) - self.softmax(x, w))
@@ -121,17 +121,8 @@ class SoftMax():
         for t in xrange(iterations):
             if anneal:
                 lr = self.update_learning_rate(t)
-            # prediction = self.softmax(self.train_data, self.weights)
-            # error = self.get_regularize_labels(self.train_labels) - prediction
             grad = self.dl(self.weights, self.train_data, self.train_labels)
-            # print prediction
             self.weights = np.add(self.weights, lr * grad)
-            # print self.weights
-            # print grad
-            # print '------'
-            # print self.L(self.weights, self.train_data, self.train_labels)
-            # print self.evaluate(self.weights, self.train_data, self.train_labels)
-
             if log_rate is not None:
                 if t % log_rate == 0:
                     self.iter_steps.append(t)
@@ -143,6 +134,7 @@ class SoftMax():
                                                         self.test_data,
                                                         self.test_labels)
                                                         )
+
                     if self.holdout_data is not None:
                         self.holdout_logs.append(self.evaluate(self.weights,
                                                                self.holdout_data,
@@ -167,16 +159,3 @@ class SoftMax():
         plt.title('Softmax Regression')
         plt.legend(loc='upper right')
         plt.show()
-
-# def main():
-
-RL = SoftMax('mnist', lr_dampener=50)
-RL.subset_data(20000, -200)
-RL.assign_holdout(10)
-
-RL.gradient_descent(400, log_rate=10)
-RL.plot_logs()
-
-
-# if __name__ == '__main__':
-#     main()

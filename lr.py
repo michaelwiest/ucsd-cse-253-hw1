@@ -2,7 +2,6 @@ from mnist import MNIST
 import pandas as pd
 import numpy as np
 import pylab as plt
-from helper import *
 
 np.set_printoptions(threshold=np.nan)
 
@@ -148,17 +147,3 @@ class LinearRegressor():
         plt.title('Gradient descent for character: {}'.format(self.target))
         plt.legend(loc='upper right')
         plt.show()
-
-# def main():
-
-RL = LinearRegressor('mnist', lr_dampener=75)#, lr0=0.0002)
-RL.subset_data(20000, -200)
-RL.assign_holdout(10)
-
-RL.reassign_labels_for_target(2)
-RL.gradient_descent(500, log_rate=50)
-RL.plot_logs()
-
-#
-# if __name__ == '__main__':
-#     main()
