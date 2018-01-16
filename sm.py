@@ -71,7 +71,7 @@ class SoftMax():
     def prefix_one(self, some_array):
         return [[1] + sr for sr in some_array]
 
-    def sigma(self, x, w):
+    def softmax(self, x, w):
         dot_exp = np.exp(np.dot(x, w))
         summed = np.sum(dot_exp, axis=1)
         summed = np.reshape(summed, (dot_exp.shape[0], 1))
@@ -85,17 +85,17 @@ class SoftMax():
 
     def L(self, w, x, y):
         rvals = self.get_regularize_labels(y)
-        scores = self.sigma(x, w)
+        scores = self.softmax(x, w)
         return -1 * np.sum(rvals * np.log(scores))
-        # return np.sum(y * np.log(self.sigma(x, w)) + (1 - y) * np.log(self.sigma(-x, w)))
+        # return np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
 
     def norm_loss_function(self, w, x, y):
-        return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(self.sigma(x, w)) + (1 - y) * np.log(self.sigma(-x, w)))
+        return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
 
     def dl(self, w, x, y):
-        difference = (self.get_regularize_labels(y) - self.sigma(x, w))
+        difference = (self.get_regularize_labels(y) - self.softmax(x, w))
         # print self.get_regularize_labels(y)
-        # print self.sigma(x, w)
+        # print self.softmax(x, w)
         # print difference
         # print np.dot(np.transpose(x), difference)
         return np.dot(np.transpose(x), difference)
@@ -130,7 +130,7 @@ class SoftMax():
         for t in xrange(iterations):
             if anneal:
                 lr = self.update_learning_rate(t)
-            # prediction = self.sigma(self.train_data, self.weights)
+            # prediction = self.softmax(self.train_data, self.weights)
             # error = self.get_regularize_labels(self.train_labels) - prediction
             grad = self.dl(self.weights, self.train_data, self.train_labels)
             # print prediction
@@ -158,10 +158,10 @@ class SoftMax():
                                                                )
 
     def evaluate(self, w, x, y):
-        ind = np.argmax(self.sigma(x, w), axis=1)
+        ind = np.argmax(self.softmax(x, w), axis=1)
         pred = [self.possible_categories[i] for i in ind]
         # print '----'
-        # print self.sigma(x, w)
+        # print self.softmax(x, w)
         # print np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
         # print pred
         # print y
