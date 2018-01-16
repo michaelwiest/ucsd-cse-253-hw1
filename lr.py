@@ -15,19 +15,30 @@ class LinearRegressor():
         self.load_data(self.mnist_directory)
         print 'Loaded data...'
         if lr0 == None:
-            self.lr0 = 0.002 / self.train_data.shape[0]
+            self.lr0 = lr0 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
 
         self.weights = np.array([0] * self.train_data.shape[1])
+        print len(self.weights)
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
         tr_data, tr_labels = mndata.load_training()
         te_data, te_labels = mndata.load_testing()
-        self.train_data = np.array(tr_data)
+        train_temp = np.array(tr_data)
+        self.train_data = np.concatenate(
+                                        (np.ones((train_temp.shape[0], 1)),
+                                         train_temp
+                                        ), axis=1
+                                        )
         self.train_labels_original = np.array(tr_labels)
-        self.test_data = np.array(te_data)
+        test_temp = np.array(te_data)
+        self.test_data = np.concatenate(
+                                        (np.ones((test_temp.shape[0], 1)),
+                                         test_temp
+                                        ), axis=1
+                                        )
         self.test_labels_original = np.array(te_labels)
 
     def subset_data(self, train_amount, test_amount):
@@ -63,14 +74,8 @@ class LinearRegressor():
     def L(self, w, x, y):
         return np.sum(y * np.log(sigma(x, w)) + (1 - y) * np.log(sigma(-x, w)))
 
-    def dl(self, w, x, y):
-        to_return = np.array([0] * len(w))
-        for t in xrange(x.shape[0]):
-            xt = x[t, :]
-            yt = y[t]
-            temp = (yt - sigma(w, xt)) * xt
-            to_return = np.add(to_return, temp)
-        return to_return
+    def norm_loss_function(self, w, x, y):
+        return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(sigma(x, w)) + (1 - y) * np.log(sigma(-x, w)))
 
     def assign_holdout(self, percent):
         percent /= 100.0
@@ -79,6 +84,7 @@ class LinearRegressor():
         self.train_labels_original = self.train_labels_original[:-num_held]
         self.holdout_data = self.train_data[-num_held:]
         self.holdout_labels_original = self.train_labels_original[-num_held:]
+        print self.holdout_data.shape
         print 'Assigned holdout data'
 
     def update_learning_rate(self, iteration):
@@ -89,9 +95,14 @@ class LinearRegressor():
 
     def gradient_descent(self, iterations, anneal=True, log_rate=None):
         self.iter_steps = []
+
         self.train_logs = []
         self.test_logs = []
         self.holdout_logs = []
+
+        self.train_loss = []
+        self.holdout_loss = []
+        self.test_loss = []
         lr = self.lr0
 
         for t in xrange(iterations):
@@ -140,12 +151,12 @@ class LinearRegressor():
 
 def main():
 
-    RL = LinearRegressor('mnist', lr_dampener=100)
-    RL.subset_data(15000, -200)
+    RL = LinearRegressor('mnist', lr_dampener=10, lr0=0.0002)
+    RL.subset_data(20000, -200)
     RL.assign_holdout(10)
 
     RL.reassign_labels_for_target(2)
-    RL.gradient_descent(700, log_rate=50)
+    RL.gradient_descent(500, log_rate=50)
     RL.plot_logs()
 
 
