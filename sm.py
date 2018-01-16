@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import pylab as plt
 
-np.set_printoptions(threshold=np.nan)
+# np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=100)
 
 class SoftMax():
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None):
@@ -49,6 +50,8 @@ class SoftMax():
                                         )
         self.test_labels = np.array(te_labels)
         self.num_categories = len(list(set(self.train_labels)))
+        self.possible_categories = list(set(self.train_labels))
+        self.possible_categories.sort()
 
     def subset_data(self, train_amount, test_amount):
         if train_amount > 0:
@@ -73,7 +76,12 @@ class SoftMax():
         summed = np.sum(dot_exp, axis=1)
         summed = np.reshape(summed, (dot_exp.shape[0], 1))
         summed = np.repeat(summed, dot_exp.shape[1], axis=1)
+        # print dot_exp
+        # print summed
+        # print (dot_exp / (1.0 * summed))
         return (dot_exp / (1.0 * summed))
+        # a = np.dot(np.transpose(w), np.transpose(x))
+
 
     def L(self, w, x, y):
         rvals = self.get_regularize_labels(y)
@@ -86,9 +94,10 @@ class SoftMax():
 
     def dl(self, w, x, y):
         difference = (self.get_regularize_labels(y) - self.sigma(x, w))
-        print self.get_regularize_labels(y)
-        print self.sigma(x, w)
-        print difference
+        # print self.get_regularize_labels(y)
+        # print self.sigma(x, w)
+        # print difference
+        # print np.dot(np.transpose(x), difference)
         return np.dot(np.transpose(x), difference)
 
     def assign_holdout(self, percent):
@@ -126,7 +135,10 @@ class SoftMax():
             grad = self.dl(self.weights, self.train_data, self.train_labels)
             # print prediction
             self.weights = np.add(self.weights, lr * grad)
-
+            # print self.weights
+            # print grad
+            # print '------'
+            print self.L(self.weights, self.train_data, self.train_labels)
 
             if log_rate is not None:
                 if t % log_rate == 0:
@@ -146,7 +158,14 @@ class SoftMax():
                                                                )
 
     def evaluate(self, w, x, y):
-        pred = np.max(self.sigma(x, w), axis=1)
+        ind = np.argmax(self.sigma(x, w), axis=1)
+        pred = [self.possible_categories[i] for i in ind]
+        # print '----'
+        # print self.sigma(x, w)
+        # print np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
+        # print pred
+        # print y
+        # print ind
         return np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
 
     def train_on_number(self, num, iterations, log_rate=None, anneal=True):
@@ -165,12 +184,11 @@ class SoftMax():
 
 def main():
 
-    RL = SoftMax('mnist', lr_dampener=10, lr0=0.000002)
-    RL.subset_data(100, -200)
+    RL = SoftMax('mnist', lr_dampener=10, lr0=0.00002)
+    RL.subset_data(50, -200)
     RL.assign_holdout(10)
 
-    # RL.reassign_labels_for_target(2)
-    RL.gradient_descent(1, log_rate=50)
+    RL.gradient_descent(10, log_rate=10)
     RL.plot_logs()
 
 
