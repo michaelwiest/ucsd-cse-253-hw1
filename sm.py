@@ -24,8 +24,13 @@ class SoftMax():
                                  self.num_categories
                                  ))
 
+    def dl1(self, w):
+        return np.sign(w)
 
-    def get_regularize_labels(self, labels):
+    def dl2(self, w):
+        return 2 * w
+
+    def get_regularized_labels(self, labels):
         potential_vals = list(set(labels))
         potential_vals.sort()
         return np.array([[int(l == p) for p in potential_vals] for l in labels])
@@ -78,7 +83,7 @@ class SoftMax():
         return (dot_exp / (1.0 * summed))
 
     def L(self, w, x, y):
-        rvals = self.get_regularize_labels(y)
+        rvals = self.get_regularized_labels(y)
         scores = self.softmax(x, w)
         return -1 * np.sum(rvals * np.log(scores))
         # return np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
@@ -88,7 +93,7 @@ class SoftMax():
         return (1 / (1.0 * x.shape[0] * w.shape[1])) * np.sum(y * np.log(self.softmax(x, w)))
 
     def dl(self, w, x, y):
-        difference = (self.get_regularize_labels(y) - self.softmax(x, w))
+        difference = (self.get_regularized_labels(y) - self.softmax(x, w))
         return np.dot(np.transpose(x), difference)
 
     def assign_holdout(self, percent):

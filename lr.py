@@ -20,7 +20,12 @@ class LinearRegressor():
             self.lr0 = lr0
 
         self.weights = np.array([0] * self.train_data.shape[1])
-        print len(self.weights)
+
+    def dl1(self, w):
+        return np.sign(w)
+
+    def dl2(self, w):
+        return 2 * w
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
@@ -56,12 +61,25 @@ class LinearRegressor():
             self.test_labels_original = self.test_labels_original[-test_amount:]
         print 'Subsetted data.'
 
-    def reassign_labels_for_target(self, target):
+    def reassign_labels_for_target(self, target, not_target):
         self.target = target
-        self.train_labels = [int(i == target) for i in self.train_labels_original]
-        self.test_labels = [int(i == target) for i in self.test_labels_original]
+        self.not_target = not_target
+        new_set = [target, not_target]
+        indices = [i in new_set for i in self.train_labels_original]
+        self.train_data = np.array([self.train_data[i] for i in xrange(len(self.train_data)) if indices[i]])
+        self.train_labels = np.array([int(self.train_labels_original[i] == target) for i in xrange(len(self.train_labels_original)) if indices[i]])
+        # self.train_labels = [i for i in self.test_labels_original]
+        # self.train_labels = [int(i == target) for i in self.train_labels_original]
+        # self.test_labels = [int(i == target) for i in self.test_labels_original]
+        indices = [i in new_set for i in self.test_labels_original]
+        self.test_data = np.array([self.test_data[i] for i in xrange(len(self.test_data)) if indices[i]])
+        self.test_labels = np.array([int(self.test_labels_original[i] == target) for i in xrange(len(self.test_labels_original)) if indices[i]])
+
         if self.holdout_labels_original is not None:
-            self.holdout_labels = [int(i == target) for i in self.holdout_labels_original]
+            indices = [i in new_set for i in self.holdout_labels_original]
+            self.holdout_data = np.array([self.holdout_data[i] for i in xrange(len(self.holdout_data)) if indices[i]])
+            self.holdout_labels = np.array([int(self.holdout_labels_original[i] == target) for i in xrange(len(self.holdout_labels_original)) if indices[i]])
+            # self.holdout_labels = [int(i == target) for i in self.holdout_labels_original]
         print 'Reassigned labels for target value: {}'.format(target)
 
 
@@ -73,6 +91,11 @@ class LinearRegressor():
 
     def L(self, w, x, y):
         return np.sum(y * np.log(sigma(x, w)) + (1 - y) * np.log(sigma(-x, w)))
+
+    def dL(self, w, x, y):
+        prediction = self.sigma(x, w)
+        error = y - prediction
+        return np.dot(np.transpose(x), error)
 
     def norm_loss_function(self, w, x, y):
         return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(sigma(x, w)) + (1 - y) * np.log(sigma(-x, w)))
@@ -107,11 +130,8 @@ class LinearRegressor():
         for t in xrange(iterations):
             if anneal:
                 lr = self.update_learning_rate(t)
-            prediction = self.sigma(self.train_data, self.weights)
-            error = self.train_labels - prediction
-            grad = np.dot(self.train_data.T, error)
+            grad = self.dL(self.weights, self.train_data, self.train_labels)
             self.weights = np.add(self.weights, lr * grad)
-
 
             if log_rate is not None:
                 if t % log_rate == 0:
@@ -144,6 +164,7 @@ class LinearRegressor():
         plt.plot(self.iter_steps, self.test_logs, label='Test Data')
         plt.ylabel('Percent misclassified')
         plt.xlabel('Iterations')
-        plt.title('Gradient descent for character: {}'.format(self.target))
+        plt.title('Gradient descent for character: {} vs {}'.format(self.target,
+                                                                    self.not_target))
         plt.legend(loc='upper right')
         plt.show()
