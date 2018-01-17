@@ -20,6 +20,9 @@ class SoftMax():
         else:
             self.lr0 = lr0
 
+        self.initialize_weights()
+
+    def initialize_weights(self):
         self.weights = np.zeros((self.train_data.shape[1],
                                  self.num_categories
                                  ))
@@ -90,7 +93,9 @@ class SoftMax():
 
     def norm_loss_function(self, w, x, y):
         # return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
-        return (1 / (1.0 * x.shape[0] * w.shape[1])) * np.sum(y * np.log(self.softmax(x, w)))
+        # return (-1.0 / (x.shape[0] * w.shape[1])) * np.sum(y * np.log(self.softmax(x, w)))
+        y = self.get_regularized_labels(y)
+        return (-1.0 / (x.shape[0] * w.shape[1])) * np.sum(y * self.softmax(x, w))
 
     def dl(self, w, x, y):
         difference = (self.get_regularized_labels(y) - self.softmax(x, w))
@@ -111,7 +116,12 @@ class SoftMax():
         else:
             return self.lr0
 
-    def gradient_descent(self, iterations, anneal=True, log_rate=None):
+    def gradient_descent(self, iterations, anneal=True, log_rate=None,
+                         l1=False, l2=False, lamb=None):
+        if l1 and l2:
+            raise ValueError('Only do l1 or l2')
+        if (l1 or l2) and lamb is None:
+            raise ValueError('Specify lambda if l1 and l2 flags on.')
         self.iter_steps = []
 
         self.train_logs = []
@@ -127,6 +137,12 @@ class SoftMax():
             if anneal:
                 lr = self.update_learning_rate(t)
             grad = self.dl(self.weights, self.train_data, self.train_labels)
+
+            if l1:
+                grad -= lamb * self.dl1(self.weights)
+            if l2:
+                grad -= lamb * self.dl2(self.weights)
+
             self.weights = np.add(self.weights, lr * grad)
             if log_rate is not None:
                 if t % log_rate == 0:
@@ -135,16 +151,27 @@ class SoftMax():
                                                          self.train_data,
                                                          self.train_labels)
                                                          )
+                    self.train_loss.append(self.norm_loss_function(self.weights,
+                                                                   self.train_data,
+                                                                   self.train_labels)
+                                                                   )
                     self.test_logs.append(self.evaluate(self.weights,
                                                         self.test_data,
                                                         self.test_labels)
                                                         )
-
+                    self.test_loss.append(self.norm_loss_function(self.weights,
+                                                                   self.test_data,
+                                                                   self.test_labels)
+                                                                   )
                     if self.holdout_data is not None:
                         self.holdout_logs.append(self.evaluate(self.weights,
                                                                self.holdout_data,
                                                                self.holdout_labels)
                                                                )
+                        self.holdout_loss.append(self.norm_loss_function(self.weights,
+                                                                       self.holdout_data,
+                                                                       self.holdout_labels)
+                                                                       )
 
     def evaluate(self, w, x, y):
         ind = np.argmax(self.softmax(x, w), axis=1)
@@ -160,6 +187,15 @@ class SoftMax():
         plt.plot(self.iter_steps, self.holdout_logs, label='Holdout Data')
         plt.plot(self.iter_steps, self.test_logs, label='Test Data')
         plt.ylabel('Percent misclassified')
+        plt.xlabel('Iterations')
+        plt.title('Softmax Regression')
+        plt.legend(loc='upper right')
+        plt.show()
+
+        plt.plot(self.iter_steps, self.train_loss, label='Training Data')
+        plt.plot(self.iter_steps, self.holdout_loss, label='Holdout Data')
+        plt.plot(self.iter_steps, self.test_loss, label='Test Data')
+        plt.ylabel('Loss Function')
         plt.xlabel('Iterations')
         plt.title('Softmax Regression')
         plt.legend(loc='upper right')

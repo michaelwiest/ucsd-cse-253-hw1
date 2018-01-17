@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import copy
+import numpy as np
 
 
 def mnist_printer(mnist_array, save=False):
