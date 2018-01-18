@@ -2,6 +2,7 @@ from mnist import MNIST
 import pandas as pd
 import numpy as np
 import pylab as plt
+from helper import *
 
 np.set_printoptions(threshold=np.nan)
 
@@ -63,7 +64,7 @@ class LinearRegressor():
         else:
             self.test_data_original = self.test_data_original[-test_amount:]
             self.test_labels_original = self.test_labels_original[-test_amount:]
-        print 'Subsetted data.'
+        print 'Subsetted data...'
 
     def reassign_labels_for_target(self, target, not_target):
         self.target = target
@@ -80,7 +81,7 @@ class LinearRegressor():
             indices = [i in new_set for i in self.holdout_labels_original]
             self.holdout_data = np.array([self.holdout_data_original[i] for i in xrange(len(self.holdout_data_original)) if indices[i]])
             self.holdout_labels = np.array([int(self.holdout_labels_original[i] == target) for i in xrange(len(self.holdout_labels_original)) if indices[i]])
-        print 'Reassigned labels for target value: {}'.format(target)
+        print 'Reassigned labels for target value: {} vs {}...'.format(target, not_target)
 
     def sigma(self, x, w):
         return 1 / (1 + np.exp(-1 * (np.dot(x, w))))
@@ -105,7 +106,7 @@ class LinearRegressor():
         self.train_labels_original = self.train_labels_original[:-num_held]
         self.holdout_data_original = self.train_data_original[-num_held:]
         self.holdout_labels_original = self.train_labels_original[-num_held:]
-        print 'Assigned holdout data'
+        print 'Assigned holdout data...'
 
     def update_learning_rate(self, iteration):
         if self.lr_dampener is not None:
@@ -128,22 +129,23 @@ class LinearRegressor():
         self.train_loss = []
         self.holdout_loss = []
         self.test_loss = []
+        self.weight_lengths = []
         lr = self.lr0
 
         for t in xrange(iterations):
             if anneal:
                 lr = self.update_learning_rate(t)
             grad = self.dL(self.weights, self.train_data, self.train_labels)
-            # print grad
+
             if l1:
                 grad -= lamb * self.dl1(self.weights)
             if l2:
                 grad -= lamb * self.dl2(self.weights)
             self.weights = np.add(self.weights, lr * grad)
-            # print grad
-            # print '----'
+
             if log_rate is not None:
                 if t % log_rate == 0:
+                    self.weight_lengths.append(sum([int(is_close(r, 0, 0.001)) for r in self.weights]))
                     self.iter_steps.append(t)
                     self.train_logs.append(self.evaluate(self.weights,
                                                          self.train_data,
@@ -173,7 +175,7 @@ class LinearRegressor():
 
     def evaluate(self, w, x, y):
         pred = np.round(self.sigma(x, w))
-        return np.sum(np.abs(y - pred)) * 100.0 / x.shape[0]
+        return 100.0 - np.sum(np.abs(y - pred)) * 100.0 / x.shape[0]
 
     def train_on_number(self, num, iterations, log_rate=None, anneal=True):
         self.reassign_labels_for_target(num)
@@ -183,11 +185,11 @@ class LinearRegressor():
         plt.plot(self.iter_steps, self.train_logs, label='Training Data')
         plt.plot(self.iter_steps, self.holdout_logs, label='Holdout Data')
         plt.plot(self.iter_steps, self.test_logs, label='Test Data')
-        plt.ylabel('Percent misclassified')
+        plt.ylabel('Percent classified correctly')
         plt.xlabel('Iterations')
         plt.title('Gradient descent for character: {} vs {}'.format(self.target,
                                                                     self.not_target))
-        plt.legend(loc='upper right')
+        plt.legend(loc='lower right')
         plt.show()
 
         plt.plot(self.iter_steps, self.train_loss, label='Training Data')

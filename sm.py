@@ -2,6 +2,7 @@ from mnist import MNIST
 import pandas as pd
 import numpy as np
 import pylab as plt
+from helper import *
 
 # np.set_printoptions(threshold=np.nan)
 np.set_printoptions(threshold=100)
@@ -92,8 +93,6 @@ class SoftMax():
         # return np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
 
     def norm_loss_function(self, w, x, y):
-        # return (1 / 1.0 * x.shape[0]) * np.sum(y * np.log(self.softmax(x, w)) + (1 - y) * np.log(self.softmax(-x, w)))
-        # return (-1.0 / (x.shape[0] * w.shape[1])) * np.sum(y * np.log(self.softmax(x, w)))
         y = self.get_regularized_labels(y)
         return (-1.0 / (x.shape[0] * w.shape[1])) * np.sum(y * self.softmax(x, w))
 
@@ -131,6 +130,7 @@ class SoftMax():
         self.train_loss = []
         self.holdout_loss = []
         self.test_loss = []
+        self.weight_lengths = []
         lr = self.lr0
 
         for t in xrange(iterations):
@@ -146,6 +146,7 @@ class SoftMax():
             self.weights = np.add(self.weights, lr * grad)
             if log_rate is not None:
                 if t % log_rate == 0:
+                    self.weight_lengths.append(np.sum(is_close(self.weights, 0, 0.001)))
                     self.iter_steps.append(t)
                     self.train_logs.append(self.evaluate(self.weights,
                                                          self.train_data,
@@ -176,7 +177,7 @@ class SoftMax():
     def evaluate(self, w, x, y):
         ind = np.argmax(self.softmax(x, w), axis=1)
         pred = [self.possible_categories[i] for i in ind]
-        return 100.0 * np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
+        return 100.0 - 100.0 * np.sum((pred != y).astype(int)) / (1.0 * x.shape[0])
 
     def train_on_number(self, num, iterations, log_rate=None, anneal=True):
         self.reassign_labels_for_target(num)
@@ -186,10 +187,10 @@ class SoftMax():
         plt.plot(self.iter_steps, self.train_logs, label='Training Data')
         plt.plot(self.iter_steps, self.holdout_logs, label='Holdout Data')
         plt.plot(self.iter_steps, self.test_logs, label='Test Data')
-        plt.ylabel('Percent misclassified')
+        plt.ylabel('Percent classified correctly')
         plt.xlabel('Iterations')
         plt.title('Softmax Regression')
-        plt.legend(loc='upper right')
+        plt.legend(loc='lower right')
         plt.show()
 
         plt.plot(self.iter_steps, self.train_loss, label='Training Data')

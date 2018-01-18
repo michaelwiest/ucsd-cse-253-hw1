@@ -16,3 +16,10 @@ def weights_to_2d(weights):
     dim2 = int(len(weights) / dim1)
     weights = weights[:dim1*dim2] # This is for adding the occlusions.
     return copy.deepcopy(np.reshape(weights, (dim1, dim2)))
+
+
+def is_close(a, b, allowed_error):
+    return abs(a - b) > allowed_error
+
+# def is_close(a, b, allowed_error):
+#     return abs(a - b) <= allowed_error
